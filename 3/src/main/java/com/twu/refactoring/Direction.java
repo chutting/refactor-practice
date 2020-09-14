@@ -2,14 +2,11 @@ package com.twu.refactoring;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 
-public class Direction {
+enum Direction {
+    NORTH('N'), SOUTH('S'), WEST('W'), EAST('E');
     private final char direction;
-    private static final List<Direction> directionList = Arrays.asList(new Direction('N'),
-        new Direction('W'),
-        new Direction('S'),
-        new Direction('E'));
+    private static final List<Direction> directionList = Arrays.asList(NORTH, WEST, SOUTH, EAST);
 
     Direction(char direction) {
         this.direction = direction;
@@ -37,19 +34,6 @@ public class Direction {
             return directionList.get(directionList.size() - 1);
         }
         return directionList.get(index - 1);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Direction direction1 = (Direction) o;
-        return direction == direction1.direction;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(direction);
     }
 
     @Override
