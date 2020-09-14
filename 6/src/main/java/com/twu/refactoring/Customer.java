@@ -7,6 +7,11 @@ public class Customer {
 
 	private String name;
 	private ArrayList<Rental> rentalList = new ArrayList<Rental>();
+	private final String STATEMENT_HEAD = "Rental Record for %s\n";
+	private final String STATEMENT_FOOTER = "Amount owed is %.1f\n";
+	private final String SHOW_RENTER_POINTS= "You earned %d frequent renter points";
+
+
 
 	public Customer(String name) {
 		this.name = name;
@@ -24,46 +29,46 @@ public class Customer {
 		double totalAmount = 0;
 		int frequentRenterPoints = 0;
 		Iterator<Rental> rentals = rentalList.iterator();
-		String result = "Rental Record for " + getName() + "\n";
+		String result = String.format(STATEMENT_HEAD, getName());
+
 		while (rentals.hasNext()) {
-			double thisAmount = 0;
-			Rental each = rentals.next();
+			Rental eachRental = rentals.next();
+			double thisAmount = calculateEachRentalAmount(eachRental);
 
-			// determine amounts for each line
-			switch (each.getMovie().getPriceCode()) {
-			case Movie.REGULAR:
-				thisAmount += 2;
-				if (each.getDaysRented() > 2)
-					thisAmount += (each.getDaysRented() - 2) * 1.5;
-				break;
-			case Movie.NEW_RELEASE:
-				thisAmount += each.getDaysRented() * 3;
-				break;
-			case Movie.CHILDRENS:
-				thisAmount += 1.5;
-				if (each.getDaysRented() > 3)
-					thisAmount += (each.getDaysRented() - 3) * 1.5;
-				break;
+			frequentRenterPoints++;
 
+			if (couldGetDoublePoints(eachRental)) {
+				frequentRenterPoints++;
 			}
 
-			// add frequent renter points
-			frequentRenterPoints++;
-			// add bonus for a two day new release rental
-			if ((each.getMovie().getPriceCode() == Movie.NEW_RELEASE)
-					&& each.getDaysRented() > 1)
-				frequentRenterPoints++;
-
-			// show figures for this rental
-			result += "\t" + each.getMovie().getTitle() + "\t"
-					+ String.valueOf(thisAmount) + "\n";
+			result += showFiguresOfRental(eachRental, thisAmount);
 			totalAmount += thisAmount;
-
 		}
-		// add footer lines
-		result += "Amount owed is " + String.valueOf(totalAmount) + "\n";
-		result += "You earned " + String.valueOf(frequentRenterPoints)
-				+ " frequent renter points";
+
+		return addFooter(result, totalAmount, frequentRenterPoints);
+	}
+
+	private double calculateEachRentalAmount(Rental rental) {
+		Movie eachMovie = rental.getMovie();
+
+		double thisAmount = eachMovie.getPrimaryPrice();
+		if (rental.getDaysRented() > eachMovie.getCouldRentedForFree()) {
+			thisAmount += (rental.getDaysRented() - eachMovie.getCouldRentedForFree()) * eachMovie.getPricePerDay();
+		}
+		return thisAmount;
+	}
+
+	private boolean couldGetDoublePoints(Rental rental) {
+		return (rental.getMovie().getPriceCode() == Movie.NEW_RELEASE) && rental.getDaysRented() > 1;
+	}
+
+	private String showFiguresOfRental(Rental rental, double rentalAmount) {
+		return String.format("\t%s\t%.1f\n", rental.getMovie().getTitle(), rentalAmount);
+	}
+
+	private String addFooter(String result, double totalAmount, int frequentRenterPoints) {
+		result += String.format(STATEMENT_FOOTER, totalAmount);
+		result += String.format(SHOW_RENTER_POINTS, frequentRenterPoints);
 		return result;
 	}
 
